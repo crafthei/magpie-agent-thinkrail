@@ -26,7 +26,7 @@ export const agent = {
   format: "json",
   ua: ["thinkrail"],
   notice:
-    "Connect, then restart ThinkRail and pick a Magpie model in its model picker. Disconnecting puts the file back. 连接后重启 ThinkRail，在模型选择器中选择 Magpie 模型；断开连接会还原原配置。",
+    "Restart ThinkRail to see Magpie's models, then pick one in its model picker. Disconnecting restores your previous file. 重启 ThinkRail 后在模型选择器中选择 Magpie 模型；断开连接会还原原配置。",
 }
 
 // pi accepts these reasoning levels; map whatever Magpie's catalog publishes.

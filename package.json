@@ -1,6 +1,6 @@
 {
   "name": "magpie-agent-thinkrail",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "JetBrains ThinkRail as a connect-only Magpie agent: injects the Magpie gateway into ~/.pi/agent/models.json (ThinkRail embeds the pi coding agent)",
   "type": "module",
   "files": ["thinkrail.agent.js", "README.md", "NOTICE.md", "LICENSE"],

@@ -14,6 +14,12 @@
 
 插件能否被看见，取决于 Magpie 会不会按 `magpie-plugin` topic 自动去 GitHub 上找第三方仓库。该能力 2026-10-07 合入上游（提交 `f6f960e4`），现存最早的 release v0.1.1194（2026-10-11）已经带上，更早的 release 已被上游删除、无从考证。agent 插件通道要 0.1.1243 才有，两个条件取交集，下限就是 0.1.1243。本机实测 0.1.2075。
 
+Agents 页只在检测到 ThinkRail 时才显示这一行（探测的是安装目录 `~/AppData/Local/ai.thinkrail.app`）；没装 ThinkRail 的机器上，本插件不会出现在列表里，Magpie 也不提供安装指引——那是上游给内置 CLI 硬编码的功能，第三方插件没有入口。
+
+## 共用目录警告
+
+`~/.pi/agent` 是 pi coding agent 的存放目录。ThinkRail 内嵌 pi，与独立安装的 pi agent 共用这同一个目录、同一份 `models.json`。本项目只为 ThinkRail 设计：独立 pi agent 的兼容性没有测试，也不打算测试。如果你的机器上装有独立的 pi agent，本插件写入的 `providers.magpie` 与它发生任何不兼容、串扰或故障，后果自己承担。
+
 ## 安装
 
 ```sh
@@ -32,9 +38,15 @@ magpie thinkrail default           # 断开：还原
 magpie plugin rm magpie-agent-thinkrail
 ```
 
-connect-only 的插件不写"当前模型"：pi 把它存在 `models.json` 之外，`magpie thinkrail <模型id>` 会被静默忽略（实测如此）。连接后重启 ThinkRail，在模型选择器里选 Magpie 分组下的模型。
+connect-only 的插件不写"当前模型"：pi 把它存在 `models.json` 之外，`magpie thinkrail <模型id>` 会被静默忽略（实测如此）。连接后**重启 ThinkRail**，在模型选择器里选 Magpie 分组下的模型。
 
 先断开 agent，再禁用或卸载插件；按上游说明，移除插件不会触发 agent 的断开还原流程。
+
+## 接管之后
+
+ThinkRail 0.3.0 的 provider 页会出现 Magpie 条目，显示「已托管」，端点字段**不可编辑**（2026-10-31 用户实测）——它完全归 Magpie 管，改目录、换端点都在 Magpie 侧做，断开重连一次即可同步。
+
+模型的显示不会实时跟着 `models.json` 走：ThinkRail 0.3.0 不监听这个文件，连接后要重启 ThinkRail，新分组才会出现在选择器里（实测重开选择器不触发重读）。模型在会话中途经 Magpie 改动后，同样以重启为准。
 
 ## 它管什么
 
@@ -72,4 +84,4 @@ MIT。第三方材料（ThinkRail favicon，Apache-2.0；`@magpie-community/agen
 
 ## English
 
-`magpie-agent-thinkrail` adds JetBrains ThinkRail to Magpie as a connect-only agent. Connecting writes the whole `providers.magpie` object (gateway plus full catalog) into `~/.pi/agent/models.json`; disconnecting restores the previous state. Pick the model in ThinkRail's own model picker. Requires Magpie 0.1.1243 or newer. Built by a non-professional; the code was written mostly by AI, so keep expectations for code quality modest. Behaviors are marked with the versions and dates they were tested on.
+`magpie-agent-thinkrail` adds JetBrains ThinkRail to Magpie as a connect-only agent. Connecting writes the whole `providers.magpie` object (gateway plus full catalog) into `~/.pi/agent/models.json`; disconnecting restores the previous state. Pick the model in ThinkRail's own model picker after restarting it. Requires Magpie 0.1.1243 or newer. `~/.pi/agent` is shared with a standalone pi installation; standalone-pi compatibility is untested, use at your own risk. Built by a non-professional; the code was written mostly by AI, so keep expectations for code quality modest. Behaviors are marked with the versions and dates they were tested on.
