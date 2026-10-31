@@ -21,16 +21,19 @@ Magpie 网关与你的模型目录整体写入 `~/.pi/agent/models.json` 的 `pr
 
 ## Install
 
-From GitHub (private repos work with your local `gh`/git credentials):
-
-```
-magpie plugin add github:crafthei/magpie-agent-thinkrail
-```
-
-Or from a local checkout:
+While this repository is **private**, Magpie's installer cannot fetch it (its
+GitHub download does not carry your `gh` credentials — the tarball request
+404s). Install from a local checkout instead:
 
 ```
 magpie plugin add ./magpie-agent-thinkrail
+```
+
+Once the repository is public (see the publishing note at the bottom), the
+GitHub spec works:
+
+```
+magpie plugin add github:crafthei/magpie-agent-thinkrail
 ```
 
 ## Use
