@@ -16,17 +16,11 @@
 
 ## 安装
 
-仓库私有期间，Magpie 的下载器不带 GitHub 凭据，`github:` 规格会 404（2026-10-31 实测），用本地路径装：
-
-```sh
-magpie plugin add ./magpie-agent-thinkrail
-```
-
-仓库公开后切到：
-
 ```sh
 magpie plugin add github:crafthei/magpie-agent-thinkrail
 ```
+
+等价做法：在 Magpie → Plugins 页添加同样的仓库地址。要固定版本，地址写成 `github:crafthei/magpie-agent-thinkrail#v0.1.0`；从本地检出安装则用 `magpie plugin add ./magpie-agent-thinkrail`。
 
 ## 使用
 
