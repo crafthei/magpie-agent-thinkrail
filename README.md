@@ -1,87 +1,57 @@
-# magpie-agent-thinkrail
+# Magpie agent plugin for ThinkRail
 
-让 [Magpie](https://github.com/yetone/magpie) 以 connect-only agent 的方式接管 [JetBrains ThinkRail](https://github.com/JetBrains/thinkrail) 的模型端点。ThinkRail 内嵌 [pi coding agent](https://pi.dev)，模型配置读 `~/.pi/agent/models.json`。连接时把 Magpie 网关和整个模型目录写入该文件的 `providers.magpie`，断开时还原备份；模型在 ThinkRail 自己的模型选择器里切换。插件只写这一个文件，不碰 `auth.json`。Agents 页的图标用 ThinkRail 官方 favicon（Apache-2.0，出处见 [NOTICE.md](NOTICE.md)）。
+![ThinkRail](./icon.svg)
 
-本仓库与项目由非专业人士创建，代码主要由 AI 生成，对代码质量的预期不要太高；不保证积极维护，行为以文中标注的实测版本与日期为准。
+[ThinkRail](https://github.com/JetBrains/thinkrail) is JetBrains' coding agent desktop app; it embeds the [pi coding agent](https://pi.dev) and reads model providers from `~/.pi/agent/models.json`. This plugin adds ThinkRail to [Magpie](https://github.com/yetone/magpie) as a **connect-only agent**: connecting writes the whole `providers.magpie` object (gateway plus the full model catalog) into that one file, disconnecting restores what was there before. Models are picked in ThinkRail's own model picker. The plugin touches no other file, and `auth.json` stays untouched.
 
-## 要求
+Built by a non-professional; the code was written mostly by AI, so keep expectations for code quality modest. Not actively maintained — behaviors are marked with the versions and dates they were tested on.
 
-| 项 | 版本 |
-|---|---|
-| Magpie | 0.1.1243 或更新（依据见下） |
-| ThinkRail | 0.2.0 / 0.3.0（Windows 实测；仍从 `~/.pi/agent/models.json` 读 provider 的版本应当都适用） |
-| 其他 | 没有别的工具往 `models.json` 写 `magpie` 这个 provider id |
+## Install and use
 
-插件能否被看见，取决于 Magpie 会不会按 `magpie-plugin` topic 自动去 GitHub 上找第三方仓库。该能力 2026-10-07 合入上游（提交 `f6f960e4`），现存最早的 release v0.1.1194（2026-10-11）已经带上，更早的 release 已被上游删除、无从考证。agent 插件通道要 0.1.1243 才有，两个条件取交集，下限就是 0.1.1243。本机实测 0.1.2075。
+Requires **Magpie 0.1.1243 or newer** (the agent-plugin channel landed there; tested on 0.1.2075) and **ThinkRail 0.2.0 or 0.3.0** on Windows (tested; any version still reading providers from `~/.pi/agent/models.json` should work). No other tool may write a `magpie` provider id into `~/.pi/agent/models.json`.
 
-Agents 页只在检测到 ThinkRail 时才显示这一行（探测的是安装目录 `~/AppData/Local/ai.thinkrail.app`）；没装 ThinkRail 的机器上，本插件不会出现在列表里，Magpie 也不提供安装指引——那是上游给内置 CLI 硬编码的功能，第三方插件没有入口。
-
-## 共用目录警告
-
-`~/.pi/agent` 是 pi coding agent 的存放目录。ThinkRail 内嵌 pi，与独立安装的 pi agent 共用这同一个目录、同一份 `models.json`。本项目只为 ThinkRail 设计：独立 pi agent 的兼容性没有测试，也不打算测试。如果你的机器上装有独立的 pi agent，本插件写入的 `providers.magpie` 与它发生任何不兼容、串扰或故障，后果自己承担。
-
-## 安装
+This plugin exists in two installable places — install **one, not both** (same agent id `thinkrail`):
 
 ```sh
-magpie plugin add github:crafthei/magpie-agent-thinkrail
+magpie plugin add @magpie-community/agent-thinkrail        # community registry
+magpie plugin add github:crafthei/magpie-agent-thinkrail   # this repository
 ```
-
-等价做法：在 Magpie → Plugins 页添加同样的仓库地址。要固定版本，地址写成 `github:crafthei/magpie-agent-thinkrail#v0.1.0`；从本地检出安装则用 `magpie plugin add ./magpie-agent-thinkrail`。
-
-## 使用
 
 ```sh
-magpie ls                          # 装好后应出现 ThinkRail 行
-magpie thinkrail                   # 查看当前接线
-magpie thinkrail provider magpie   # 连接：写入 providers.magpie（网关 + 全部模型）
-magpie thinkrail default           # 断开：还原
-magpie plugin rm magpie-agent-thinkrail
+magpie ls                          # the ThinkRail row appears once the app is installed
+magpie thinkrail                   # current wiring
+magpie thinkrail provider magpie   # connect: writes providers.magpie (gateway + all models)
+magpie thinkrail default           # disconnect: restores the previous file
 ```
 
-connect-only 的插件不写"当前模型"：pi 把它存在 `models.json` 之外，`magpie thinkrail <模型id>` 会被静默忽略（实测如此）。连接后**重启 ThinkRail**，在模型选择器里选 Magpie 分组下的模型。
+Connect writes only `providers.magpie`; no "current model" is set — pi keeps it outside `models.json`, and `magpie thinkrail <model id>` is silently ignored (observed). **Restart ThinkRail after connecting**, then pick a model in its own picker's Magpie group.
 
-先断开 agent，再禁用或卸载插件；按上游说明，移除插件不会触发 agent 的断开还原流程。
+ThinkRail is detected by its install root `~/AppData/Local/ai.thinkrail.app`; without the app installed, the row doesn't appear on the Agents page, and Magpie offers no install guidance for it — that row is hardcoded upstream for built-in CLIs, with no entry point for third-party plugins.
 
-## 接管之后
+## Disconnect or remove
 
-ThinkRail 0.3.0 的 provider 页会出现 Magpie 条目，显示「已托管」，端点字段**不可编辑**（2026-10-31 用户实测）——它完全归 Magpie 管，改目录、换端点都在 Magpie 侧做，断开重连一次即可同步。
+Disconnect first, then disable or remove the plugin: removing the plugin does not run the agent's disconnect/restore (per upstream). Retested 2026-11-08 on Magpie 0.1.2075: after `magpie thinkrail default`, `magpie plugin rm magpie-agent-thinkrail` left `~/.pi/agent/models.json` byte-identical to its pre-connection state with no `magpie` provider left behind, and the disconnect → remove → reinstall → reconnect cycle reproduced the connected state byte-identically.
 
-模型的显示不会实时跟着 `models.json` 走：ThinkRail 0.3.0 不监听这个文件，连接后要重启 ThinkRail，新分组才会出现在选择器里（实测重开选择器不触发重读）。模型在会话中途经 Magpie 改动后，同样以重启为准。
+Disconnecting restores the stashed file as one unit. If `models.json` did not exist before the first connect, disconnecting leaves an empty `{"providers": {}}` shell file (observed, harmless).
 
-## 它管什么
+## Configuration and limits
 
-Magpie 只管 `~/.pi/agent/models.json` 里的**一个完整对象** `providers.magpie`：
+Magpie owns exactly one object in `~/.pi/agent/models.json`, the whole `providers.magpie` entry:
 
-| 托管对象内的字段 | 值 |
+| Field | Value |
 |---|---|
 | `name` | `Magpie` |
-| `baseUrl` | 网关提供的 `/v1` 地址 |
-| `apiKey` | Magpie 下发的 key；本机回环下是 `magpie-thinkrail`，Usage 页因此把调用归到 thinkrail 名下 |
-| `api` | `openai-completions` |
-| `models` | Magpie 暴露的模型目录，映射为 pi 条目 |
+| `baseUrl` | the gateway's `/v1` URL |
+| `apiKey` | Magpie-issued key; on local loopback it is `magpie-thinkrail`, so Usage attributes the calls to thinkrail |
+| `api` | `openai-completions` (Magpie does the protocol translation) |
+| `models` | Magpie's catalog, mapped to pi model entries |
 
-Magpie 对这个对象整体 stash、断开整体还原。首次连接前若文件不存在，断开后会留下一个空的 `{"providers": {}}` 壳文件（实测无害）。其他 provider id 和顶层键不受影响。ThinkRail 0.3.0 对这种外部写入的 provider 在界面显示「已托管」（2026-10-31 实测），所以 ThinkRail 侧不需要任何配套代码。
+Model entries keep id, name, image input, positive context/output limits and pi reasoning levels; an output limit above its window is clamped to the window, matching Magpie's built-in Pi adapter. Unknown limits are omitted, so ThinkRail's defaults apply.
 
-模型条目保留 id、名称、图像输入、为正的 context/output 上限和 pi 支持的思考等级；output 上限超出 context 时按 context 钳制，与 Magpie 内置 Pi adapter 一致。未知上限不写，交给 ThinkRail 用默认值。所有模型走 Magpie 的 Chat Completions 端点，协议翻译由 Magpie 完成。
+ThinkRail does not watch `models.json`: reopening the picker doesn't reload it (observed), so **restarting ThinkRail is the reliable path**; mid-session catalog changes likewise apply after a restart. Once connected, ThinkRail 0.3.0 shows the Magpie entry as「已托管」("managed", user-observed 2026-10-31) with a read-only endpoint field — everything is managed on the Magpie side, and a disconnect-reconnect syncs changes over.
 
-## 兼容性
+`~/.pi/agent` is the pi coding agent's own directory. ThinkRail's embedded pi shares it — and the same `models.json` — with a standalone pi installation. This plugin is designed for ThinkRail only; standalone-pi compatibility is untested and will not be tested. If a standalone pi on the same machine misbehaves around the written `providers.magpie`, that is at your own risk.
 
-| ThinkRail | 状态 |
-|---|---|
-| 0.2.0、0.3.0（内嵌 pi 1.4.0） | Windows 实测 |
+## License
 
-## 开发
-
-单文件模块：零 import、零依赖、无网络调用，`connect()` 是纯计算。单测用 Node 跑：
-
-```sh
-node --test test/
-```
-
-## 许可
-
-MIT。第三方材料（ThinkRail favicon，Apache-2.0；`@magpie-community/agent-pig` 的模型映射语义，MIT）出处见 [NOTICE.md](NOTICE.md)。
-
-## English
-
-`magpie-agent-thinkrail` adds JetBrains ThinkRail to Magpie as a connect-only agent. Connecting writes the whole `providers.magpie` object (gateway plus full catalog) into `~/.pi/agent/models.json`; disconnecting restores the previous state. Pick the model in ThinkRail's own model picker after restarting it. Requires Magpie 0.1.1243 or newer. `~/.pi/agent` is shared with a standalone pi installation; standalone-pi compatibility is untested, use at your own risk. Built by a non-professional; the code was written mostly by AI, so keep expectations for code quality modest. Behaviors are marked with the versions and dates they were tested on.
+MIT. Third-party material (ThinkRail favicon, Apache-2.0; model-mapping semantics from `@magpie-community/agent-pig`, MIT) is attributed in [NOTICE.md](NOTICE.md).

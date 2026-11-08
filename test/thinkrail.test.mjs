@@ -1,14 +1,14 @@
-import test from "node:test"
-import assert from "node:assert/strict"
+import { expect, test } from "bun:test"
 
+import pkg from "../package.json"
 import { agent, connect } from "../thinkrail.agent.js"
 
 test("descriptor", () => {
-  assert.equal(agent.id, "thinkrail")
-  assert.equal(agent.config, "~/.pi/agent/models.json")
-  assert.equal(agent.format, "json")
-  assert.ok(agent.dir.startsWith("~/"))
-  assert.ok(typeof agent.notice === "string" && agent.notice.length > 0)
+  expect(agent.id).toBe("thinkrail")
+  expect(agent.config).toBe("~/.pi/agent/models.json")
+  expect(agent.format).toBe("json")
+  expect(agent.dir.startsWith("~/")).toBe(true)
+  expect(typeof agent.notice === "string" && agent.notice.length > 0).toBe(true)
 })
 
 test("connect writes the whole magpie provider as one unit", () => {
@@ -19,21 +19,21 @@ test("connect writes the whole magpie provider as one unit", () => {
     ],
   })
 
-  assert.deepEqual(Object.keys(out), ["providers.magpie"])
+  expect(Object.keys(out)).toEqual(["providers.magpie"])
   const p = out["providers.magpie"]
-  assert.equal(p.name, "Magpie")
-  assert.equal(p.baseUrl, "http://127.0.0.1:3425/v1")
-  assert.equal(p.apiKey, "magpie-thinkrail")
-  assert.equal(p.api, "openai-completions")
-  assert.equal(p.models.length, 1)
+  expect(p.name).toBe("Magpie")
+  expect(p.baseUrl).toBe("http://127.0.0.1:3425/v1")
+  expect(p.apiKey).toBe("magpie-thinkrail")
+  expect(p.api).toBe("openai-completions")
+  expect(p.models.length).toBe(1)
 
   const m = p.models[0]
-  assert.equal(m.id, "deepseek/deepseek-chat")
-  assert.deepEqual(m.input, ["text"])
-  assert.equal(m.reasoning, false)
-  assert.equal(m.contextWindow, 128000)
-  assert.equal(m.maxTokens, 8192)
-  assert.equal(m.thinkingLevelMap, undefined)
+  expect(m.id).toBe("deepseek/deepseek-chat")
+  expect(m.input).toEqual(["text"])
+  expect(m.reasoning).toBe(false)
+  expect(m.contextWindow).toBe(128000)
+  expect(m.maxTokens).toBe(8192)
+  expect(m.thinkingLevelMap).toBeUndefined()
 })
 
 test("output limit never exceeds the context window", () => {
@@ -42,14 +42,14 @@ test("output limit never exceeds the context window", () => {
     models: [{ id: "x/y", name: "X", images: false, context: 32000, output: 999999, efforts: ["low", "high"] }],
   })
   const m = out["providers.magpie"].models[0]
-  assert.equal(m.maxTokens, 32000)
-  assert.equal(m.reasoning, true)
+  expect(m.maxTokens).toBe(32000)
+  expect(m.reasoning).toBe(true)
   // pig semantics: a level maps to the pi effort name when the model
   // publishes it, otherwise null ("off" asks for the "none" effort).
-  assert.equal(m.thinkingLevelMap.off, null)
-  assert.equal(m.thinkingLevelMap.low, "low")
-  assert.equal(m.thinkingLevelMap.high, "high")
-  assert.equal(m.thinkingLevelMap.minimal, null)
+  expect(m.thinkingLevelMap.off).toBe(null)
+  expect(m.thinkingLevelMap.low).toBe("low")
+  expect(m.thinkingLevelMap.high).toBe("high")
+  expect(m.thinkingLevelMap.minimal).toBe(null)
 })
 
 test("image-capable model advertises image input", () => {
@@ -58,7 +58,12 @@ test("image-capable model advertises image input", () => {
     models: [{ id: "x/img", name: "X", images: true, context: 0, output: 0, efforts: [] }],
   })
   const m = out["providers.magpie"].models[0]
-  assert.deepEqual(m.input, ["text", "image"])
-  assert.equal(m.contextWindow, undefined)
-  assert.equal(m.maxTokens, undefined)
+  expect(m.input).toEqual(["text", "image"])
+  expect(m.contextWindow).toBeUndefined()
+  expect(m.maxTokens).toBeUndefined()
+})
+
+test("icon is the same data URI in the descriptor and package.json", () => {
+  expect(agent.icon).toBe(pkg.magpie.icon)
+  expect(pkg.magpie.icon.startsWith("data:image/svg+xml;base64,")).toBe(true)
 })
